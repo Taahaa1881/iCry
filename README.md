@@ -1,86 +1,130 @@
-# iSmile - Emotion Recognition Web App
+# iSmile - Emotion Detection Web Application
 
-A lightweight, Vercel-optimized web application that performs real-time emotion recognition using TensorFlow.js. The app can analyze emotions from both webcam input and uploaded images.
+iSmile is a web application that uses TensorFlow.js to detect emotions from images and webcam captures. Built with Next.js and modern web technologies, it provides a user-friendly interface for real-time emotion analysis.
 
-## Features
+## 🚀 Features
 
-- Real-time emotion detection using TensorFlow.js
-- Support for both webcam and image upload
-- Clean, modern UI with Tailwind CSS
-- Mobile-responsive design
+- Real-time emotion detection from webcam
+- Image upload for emotion analysis
+- Support for 7 basic emotions
+- Responsive and modern UI
+- Optimized model loading and inference
 - Dark mode support
 - Model information viewer
 
-## Prerequisites
+## 🧠 Model Details
 
-- Node.js 18.x or later
-- npm or yarn
+### Training Approach
+- **Architecture**: Convolutional Neural Network (CNN) with Transfer Learning
+- **Base Model**: Pre-trained CNN for feature extraction
+- **Accuracy**: 60% on test set
+- **Training Time**: ~3 Quarter hour on GPU
+- **Optimization**: Adam optimizer with learning rate scheduling
 
-## Setup
+### Dataset
+The model is trained on the [FER2013 (Facial Expression Recognition 2013)](https://www.kaggle.com/datasets/msambare/fer2013) dataset:
+- **Total Images**: 35,887
+- **Categories**: 7 emotions (Angry, Disgust, Fear, Happy, Sad, Surprise, Neutral)
+- **Image Size**: 48x48 pixels (grayscale)
+- **Split**:
+  - Training: 28,709 images
+  - Public Test: 3,589 images
+  - Private Test: 3,589 images
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd ismile
-```
+### Model Performance
+- **Training Accuracy**: 64%
+- **Validation Accuracy**: 62%
 
-2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
+## 🛠️ Tech Stack
 
-3. Place your model files in the `public/model` directory:
-- `model.json`
-- `group1-shard1of2.bin`
-- `group1-shard2of2.bin`
-- `model_info.json`
+- **Frontend Framework**: Next.js 14
+- **AI/ML**: TensorFlow.js
+- **Styling**: Tailwind CSS
+- **Deployment**: Vercel
+- **Language**: TypeScript
+- **Package Manager**: npm
 
-4. Start the development server:
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Deployment
-
-The app is optimized for deployment on Vercel. Simply connect your repository to Vercel and deploy.
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-ismile/
+iSmile/
 ├── app/
 │   ├── detect/
-│   │   └── page.tsx
+│   │   └── page.tsx        # Main emotion detection page
 │   ├── utils/
-│   │   └── EmotionRecognizer.ts
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
+│   │   └── EmotionRecognizer.ts  # Emotion detection logic
+│   ├── globals.css         # Global styles
+│   ├── layout.tsx          # Root layout
+│   └── page.tsx            # Home page
 ├── public/
-│   └── model/
+│   └── tfjs_model/         # TensorFlow.js model files
 │       ├── model.json
 │       ├── group1-shard1of2.bin
 │       ├── group1-shard2of2.bin
 │       └── model_info.json
 ├── package.json
 ├── tsconfig.json
+├── next.config.js
+├── postcss.config.js
+├── tailwind.config.js
+├── types.d.ts
+├── vercel.json
 └── README.md
 ```
 
-## Technologies Used
+## 🚀 Getting Started
 
-- Next.js 14
-- TensorFlow.js
-- React Webcam
-- Tailwind CSS
-- TypeScript
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Taahaa1881/iCry.git
+   cd iCry
+   ```
 
-## License
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-MIT 
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🤖 AI Development Tools
+
+This project was developed using:
+- **Cursor AI**: For intelligent code completion and refactoring
+- **Generative AI**: For architecture design and implementation assistance
+- **GitHub Copilot**: For code suggestions and improvements
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
+
+### Development Guidelines
+
+- Follow the existing code style
+- Add comments for complex logic
+- Update documentation for new features
+- Test thoroughly before submitting PRs
+- Ensure all tests pass before submitting PRs
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🔗 Links
+
+- [Live Demo](https://i-cry.vercel.app/)
+- [GitHub Repository](https://github.com/Taahaa1881/iCry)
+- [Issue Tracker](https://github.com/Taahaa1881/iCry/issues)
+- [FER2013 Dataset](https://www.kaggle.com/datasets/msambare/fer2013)
