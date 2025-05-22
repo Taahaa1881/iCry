@@ -67,6 +67,7 @@ export class EmotionRecognizer {
         if (!this.model) {
             await this.loadModel();
         }
+
     }
 
     public async detectEmotion(imageElement: HTMLImageElement): Promise<{ emotion: string; confidence: number }> {

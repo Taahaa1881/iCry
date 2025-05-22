@@ -1,16 +1,7 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { EmotionRecognizer } from '../utils/EmotionRecognizer';
-
-const Webcam = dynamic(
-    () => import('react-webcam'),
-    {
-        ssr: false,
-        loading: () => <div>Loading camera...</div>
-    }
-);
 
 export default function Detect() {
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -18,39 +9,114 @@ export default function Detect() {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isCameraReady, setIsCameraReady] = useState(false);
-    const webcamRef = useRef<any>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const emotionRecognizer = useRef<EmotionRecognizer>(new EmotionRecognizer());
+    const streamRef = useRef<MediaStream | null>(null);
 
-    const handleUserMedia = useCallback(() => {
-        console.log('Camera access granted');
-        setIsCameraReady(true);
-    }, []);
-
-    const handleUserMediaError = useCallback((error: string | DOMException) => {
-        console.error('Camera error:', error);
-        setError('Failed to access camera. Please check your camera permissions.');
+    const startCamera = async () => {
+        setError(null);
         setIsCameraReady(false);
-    }, []);
+
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Camera API not supported in this browser.');
+            }
+
+            if (!videoRef.current) {
+                throw new Error('Video element not found. Please try again.');
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: 'user',
+                },
+            });
+
+            if (!videoRef.current) {
+                stream.getTracks().forEach(track => track.stop());
+                throw new Error('Video element not found. Please try again.');
+            }
+
+            videoRef.current.srcObject = stream;
+            streamRef.current = stream;
+
+            await new Promise<void>((resolve, reject) => {
+                if (!videoRef.current) {
+                    reject(new Error('Video element not found'));
+                    return;
+                }
+
+                videoRef.current.onloadedmetadata = () => {
+                    videoRef.current?.play()
+                        .then(() => {
+                            setIsCameraReady(true);
+                            resolve();
+                        })
+                        .catch(reject);
+                };
+
+                videoRef.current.onerror = () => {
+                    reject(new Error('Failed to load video stream'));
+                };
+            });
+
+        } catch (err: any) {
+            console.error('Error starting camera:', err);
+            setError(err.message || 'Could not access the camera. Please allow permissions or check device settings.');
+            setIsCameraReady(false);
+
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
+            }
+        }
+    };
+
+    const stopCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
+        }
+
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+            videoRef.current.onloadedmetadata = null;
+            videoRef.current.onerror = null;
+        }
+
+        setIsCameraReady(false);
+    };
 
     const captureImage = useCallback(async () => {
-        if (!webcamRef.current || !isCameraReady) {
-            console.error('Camera not ready');
-            setError('Camera not initialized. Please wait for camera to be ready.');
+        if (!videoRef.current || !canvasRef.current || !isCameraReady) {
+            setError('Camera not ready. Please wait for camera to initialize.');
             return;
         }
 
         try {
-            const imageSrc = webcamRef.current.getScreenshot();
-            if (!imageSrc) {
-                throw new Error('Failed to capture image');
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            const context = canvas.getContext('2d');
+
+            if (!context) {
+                throw new Error('Could not get canvas context');
             }
 
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageSrc = canvas.toDataURL('image/jpeg');
             setCapturedImage(imageSrc);
+            stopCamera();
             await analyzeEmotion(imageSrc);
         } catch (error) {
             console.error('Error capturing image:', error);
-            setError('Failed to capture image. Please try again.');
+            setError('Failed to capture image');
         }
     }, [isCameraReady]);
 
@@ -98,8 +164,14 @@ export default function Detect() {
         setCapturedImage(null);
         setEmotion(null);
         setError(null);
-        setIsCameraReady(false);
+        stopCamera();
     };
+
+    useEffect(() => {
+        return () => {
+            stopCamera();
+        };
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -117,7 +189,7 @@ export default function Detect() {
                         {!capturedImage && (
                             <div className="flex space-x-4">
                                 <button
-                                    onClick={() => setIsCameraReady(false)}
+                                    onClick={startCamera}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                                 >
                                     Use Camera
@@ -140,6 +212,17 @@ export default function Detect() {
 
                         {!capturedImage && (
                             <div className="relative">
+                                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                                    <video
+                                        ref={videoRef}
+                                        autoPlay
+                                        playsInline
+                                        muted
+                                        className="w-full h-full object-cover"
+                                        style={{ display: isCameraReady ? 'block' : 'none' }}
+                                    />
+                                </div>
+                                <canvas ref={canvasRef} className="hidden" />
                                 {!isCameraReady && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
                                         <div className="text-center">
@@ -148,36 +231,16 @@ export default function Detect() {
                                         </div>
                                     </div>
                                 )}
-                                <Webcam
-                                    audio={false}
-                                    screenshotFormat="image/jpeg"
-                                    videoConstraints={{
-                                        width: 640,
-                                        height: 480,
-                                        facingMode: "user"
-                                    }}
-                                    onUserMedia={handleUserMedia}
-                                    onUserMediaError={handleUserMediaError}
-                                    className="w-full rounded-lg"
-                                    ref={webcamRef}
-                                    mirrored={true}
-                                />
                                 <div className="mt-4 flex space-x-4">
                                     <button
                                         onClick={captureImage}
                                         disabled={!isCameraReady}
                                         className={`px-4 py-2 rounded-md ${isCameraReady
-                                                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                                : 'bg-gray-400 text-white cursor-not-allowed'
+                                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                            : 'bg-gray-400 text-white cursor-not-allowed'
                                             }`}
                                     >
                                         {isCameraReady ? 'Capture' : 'Initializing...'}
-                                    </button>
-                                    <button
-                                        onClick={resetState}
-                                        className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                                    >
-                                        Cancel
                                     </button>
                                 </div>
                             </div>
@@ -198,7 +261,7 @@ export default function Detect() {
                                         Clear
                                     </button>
                                     <button
-                                        onClick={() => setIsCameraReady(false)}
+                                        onClick={startCamera}
                                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                                     >
                                         Use Camera
