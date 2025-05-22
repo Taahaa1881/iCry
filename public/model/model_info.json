@@ -1,0 +1,33 @@
+{
+  "model_type": "emotion_recognition",
+  "input_shape": [
+    48,
+    48,
+    1
+  ],
+  "output_shape": [
+    7
+  ],
+  "emotion_labels": [
+    "angry",
+    "disgust",
+    "fear",
+    "happy",
+    "neutral",
+    "sad",
+    "surprise"
+  ],
+  "preprocessing": {
+    "rescale": "1.0/255.0",
+    "target_size": [
+      48,
+      48
+    ],
+    "color_mode": "grayscale",
+    "normalization": "divide by 255"
+  },
+  "postprocessing": {
+    "activation": "softmax",
+    "output_type": "probabilities"
+  }
+}

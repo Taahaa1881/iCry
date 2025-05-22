@@ -1,0 +1,22 @@
+{
+    "name": "Emotion Recognition Model",
+    "version": "1.0.0",
+    "description": "Face emotion recognition model",
+    "labels": [
+        "angry",
+        "disgust",
+        "fear",
+        "happy",
+        "sad",
+        "surprise",
+        "neutral"
+    ],
+    "input_shape": [
+        48,
+        48,
+        1
+    ],
+    "output_shape": [
+        7
+    ]
+}
